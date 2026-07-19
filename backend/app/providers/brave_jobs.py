@@ -1,6 +1,8 @@
 import httpx
 
 from app.config import settings
+from app.defense_filter import is_defense_related
+from app.models import JobPosting
 from app.providers.ats_search_base import (
     ATS_DOMAINS,
     ATSSearchProvider,
@@ -14,7 +16,6 @@ from app.providers.base import ProgressCallback
 SEARCH_URL = "https://api.search.brave.com/res/v1/web/search"
 PAGE_SIZE = 20  # Brave's max results per page
 MAX_OFFSET = 9  # 0-based page offset, Brave's max - up to 10 pages
-MAX_RESULTS = 50
 
 # Default per-site cap, used when the caller doesn't pass its own
 # site_result_cap (e.g. the UI's "max results per site" input - see
@@ -98,14 +99,27 @@ class BraveSearchProvider(ATSSearchProvider):
             offset += 1
         return items
 
-    def _search(
+    def fetch(
         self,
         query: str,
         limit: int,
         country: str,
         site_result_cap: int | None = None,
+        exclude_defense: bool = False,
         on_progress: ProgressCallback | None = None,
-    ) -> list[dict]:
+    ) -> list[JobPosting]:
+        # Overrides ATSSearchProvider.fetch() rather than implementing
+        # _search(): each site's postings are fetched and filtered (country,
+        # closed/expired, dead-redirect) immediately after searching it,
+        # before moving to the next site, so site_done's count is the real
+        # number of usable postings found there - not the raw search-hit
+        # count, most of which typically doesn't survive filtering. `limit`
+        # (limit_per_source) is accepted for interface consistency but
+        # unused: site_result_cap is the only depth control now, since a
+        # combined cap applied by domain list order previously meant sites
+        # queried later (Lever, Recruitee, ...) could silently end up with
+        # zero fetched postings whenever an earlier site alone reached the
+        # combined cap, despite showing a nonzero raw count live.
         cap = site_result_cap if site_result_cap is not None else SITE_RESULT_CAP
 
         if on_progress is not None:
@@ -117,7 +131,7 @@ class BraveSearchProvider(ATSSearchProvider):
                 }
             )
 
-        items: list[dict] = []
+        postings: list[JobPosting] = []
         for group in _DOMAIN_GROUPS:
             site_name = platform_names_for(group)
 
@@ -125,10 +139,30 @@ class BraveSearchProvider(ATSSearchProvider):
                 on_progress({"type": "site_start", "source": self.name, "site": site_name})
 
             found = self._search_group(query, group, cap, country)[:cap]
-            items.extend(found)
+
+            site_postings: list[JobPosting] = []
+            for item in found:
+                url = item.get("url")
+                title = item.get("title")
+                if not url or not title:
+                    continue
+                description = self._fetch_description(url, country, search_title=title)
+                if not description:
+                    continue
+                posting = self._build_posting(url, title, description)
+                if exclude_defense and is_defense_related(f"{title} {description}", posting.company):
+                    continue
+                site_postings.append(posting)
+
+            postings.extend(site_postings)
 
             if on_progress is not None:
                 on_progress(
-                    {"type": "site_done", "source": self.name, "site": site_name, "count": len(found)}
+                    {
+                        "type": "site_done",
+                        "source": self.name,
+                        "site": site_name,
+                        "count": len(site_postings),
+                    }
                 )
-        return items[: min(limit, MAX_RESULTS)]
+        return postings

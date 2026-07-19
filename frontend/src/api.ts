@@ -34,6 +34,7 @@ export function searchStream(
   country: string,
   extractionMode: ExtractionMode,
   siteResultCap: number,
+  excludeDefense: boolean,
   onEvent: (event: SearchStreamEvent) => void,
   onConnectionError: () => void,
 ): () => void {
@@ -42,6 +43,7 @@ export function searchStream(
     country,
     extraction_mode: extractionMode,
     site_result_cap: String(siteResultCap),
+    exclude_defense: String(excludeDefense),
   });
   const url = `${API_BASE}/api/search/stream?${params.toString()}`;
   const source = new EventSource(url);

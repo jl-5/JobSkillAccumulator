@@ -83,6 +83,7 @@ async def search(request: SearchRequest) -> SearchResult:
             country,
             extraction_mode,
             site_result_cap,
+            request.exclude_defense,
         )
     except NoPostingsFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -95,6 +96,7 @@ async def search_stream(
     extraction_mode: str = DEFAULT_EXTRACTION_MODE,
     limit_per_source: int = 25,
     site_result_cap: int = DEFAULT_SITE_RESULT_CAP,
+    exclude_defense: bool = False,
 ) -> StreamingResponse:
     job_title = job_title.strip()
     if not job_title:
@@ -113,6 +115,7 @@ async def search_stream(
                 country,
                 extraction_mode,
                 site_result_cap,
+                exclude_defense,
                 on_progress=event_queue.put,
             )
             event_queue.put({"type": "result", "result": result.model_dump(mode="json")})
@@ -152,6 +155,7 @@ async def history() -> list[HistoryEntry]:
                 country=data.get("country", DEFAULT_COUNTRY),
                 extraction_mode=data.get("extraction_mode", DEFAULT_EXTRACTION_MODE),
                 site_result_cap=data.get("site_result_cap", DEFAULT_SITE_RESULT_CAP),
+                exclude_defense=data.get("exclude_defense", False),
                 generated_at=data["generated_at"],
                 postings_analyzed=data["postings_analyzed"],
             )
@@ -180,6 +184,7 @@ async def history_detail(slug: str) -> SearchResult:
         country=data.get("country", DEFAULT_COUNTRY),
         extraction_mode=data.get("extraction_mode", DEFAULT_EXTRACTION_MODE),
         site_result_cap=data.get("site_result_cap", DEFAULT_SITE_RESULT_CAP),
+        exclude_defense=data.get("exclude_defense", False),
         generated_at=data["generated_at"],
         postings_analyzed=data["postings_analyzed"],
         source_breakdown=data["source_breakdown"],

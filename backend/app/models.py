@@ -45,6 +45,7 @@ class SearchRequest(BaseModel):
     country: str = "us"
     extraction_mode: ExtractionMode = "claude"
     site_result_cap: int = Field(default=10, ge=1, le=MAX_SITE_RESULT_CAP)
+    exclude_defense: bool = False
     limit_per_source: int = 25
 
 
@@ -54,6 +55,7 @@ class SearchResult(BaseModel):
     country: str
     extraction_mode: ExtractionMode
     site_result_cap: int = 10
+    exclude_defense: bool = False
     generated_at: datetime
     postings_analyzed: int
     source_breakdown: dict[str, str]
@@ -71,5 +73,6 @@ class HistoryEntry(BaseModel):
     country: str
     extraction_mode: ExtractionMode
     site_result_cap: int = 10
+    exclude_defense: bool = False
     generated_at: datetime
     postings_analyzed: int

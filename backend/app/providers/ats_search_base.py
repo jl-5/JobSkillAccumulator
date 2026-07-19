@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 
 from app.country_filter import matches_country
+from app.defense_filter import is_defense_related
 from app.models import JobPosting
 from app.providers.base import JobProvider, ProgressCallback
 from app.providers.htmlutil import strip_html
@@ -236,12 +237,22 @@ class ATSSearchProvider(JobProvider):
             return None
         return text
 
+    def _build_posting(self, url: str, title: str, description: str) -> JobPosting:
+        return JobPosting(
+            title=title,
+            company=_infer_company(url),
+            source=_infer_platform(url) or self.name,
+            url=url,
+            description=description,
+        )
+
     def fetch(
         self,
         query: str,
         limit: int,
         country: str,
         site_result_cap: int | None = None,
+        exclude_defense: bool = False,
         on_progress: ProgressCallback | None = None,
     ) -> list[JobPosting]:
         results = self._search(query, limit, country, site_result_cap, on_progress)
@@ -255,13 +266,8 @@ class ATSSearchProvider(JobProvider):
             description = self._fetch_description(url, country, search_title=title)
             if not description:
                 continue
-            postings.append(
-                JobPosting(
-                    title=title,
-                    company=_infer_company(url),
-                    source=_infer_platform(url) or self.name,
-                    url=url,
-                    description=description,
-                )
-            )
+            posting = self._build_posting(url, title, description)
+            if exclude_defense and is_defense_related(f"{title} {description}", posting.company):
+                continue
+            postings.append(posting)
         return postings

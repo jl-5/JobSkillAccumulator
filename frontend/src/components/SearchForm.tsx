@@ -14,6 +14,8 @@ interface Props {
   onExtractionModeChange: (mode: ExtractionMode) => void;
   siteResultCap: number;
   onSiteResultCapChange: (cap: number) => void;
+  excludeDefense: boolean;
+  onExcludeDefenseChange: (exclude: boolean) => void;
 }
 
 export function SearchForm({
@@ -26,6 +28,8 @@ export function SearchForm({
   onExtractionModeChange,
   siteResultCap,
   onSiteResultCapChange,
+  excludeDefense,
+  onExcludeDefenseChange,
 }: Props) {
   const [jobTitle, setJobTitle] = useState("");
 
@@ -83,6 +87,15 @@ export function SearchForm({
           disabled={loading}
           aria-label="Max results per site"
         />
+      </label>
+      <label className="exclude-defense-label">
+        <input
+          type="checkbox"
+          checked={excludeDefense}
+          onChange={(e) => onExcludeDefenseChange(e.target.checked)}
+          disabled={loading}
+        />
+        Exclude defense/clearance jobs
       </label>
       <button type="submit" disabled={loading || !jobTitle.trim()}>
         {loading ? "Searching…" : "Search"}

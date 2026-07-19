@@ -75,6 +75,7 @@ def run_search(
     country: str = DEFAULT_COUNTRY,
     extraction_mode: ExtractionMode = "claude",
     site_result_cap: int | None = None,
+    exclude_defense: bool = False,
     on_progress: ProgressCallback | None = None,
 ) -> SearchResult:
     postings: list[JobPosting] = []
@@ -100,6 +101,7 @@ def run_search(
                 limit_per_source,
                 country,
                 site_result_cap=site_result_cap,
+                exclude_defense=exclude_defense,
                 on_progress=_tracking_progress(site_breakdown, on_progress),
             )
         except Exception as exc:
@@ -151,6 +153,7 @@ def run_search(
         country=country,
         extraction_mode=extraction_mode,
         site_result_cap=resolved_site_result_cap,
+        exclude_defense=exclude_defense,
         postings_analyzed=len(postings),
         source_breakdown=source_breakdown,
         site_breakdown=site_breakdown,
@@ -166,6 +169,7 @@ def run_search(
         country=country,
         extraction_mode=extraction_mode,
         site_result_cap=resolved_site_result_cap,
+        exclude_defense=exclude_defense,
         generated_at=generated_at,
         postings_analyzed=len(postings),
         source_breakdown=source_breakdown,

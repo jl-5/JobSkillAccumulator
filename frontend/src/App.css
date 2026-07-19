@@ -124,6 +124,24 @@
   color: var(--text-primary);
 }
 
+.exclude-defense-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.search-form input[type="checkbox"] {
+  flex: none;
+  width: auto;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
 .search-form button {
   padding: 10px 18px;
   font-size: 15px;

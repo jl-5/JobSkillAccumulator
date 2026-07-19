@@ -20,6 +20,7 @@ class JobProvider(ABC):
         limit: int,
         country: str,
         site_result_cap: int | None = None,
+        exclude_defense: bool = False,
         on_progress: ProgressCallback | None = None,
     ) -> list[JobPosting]:
         ...

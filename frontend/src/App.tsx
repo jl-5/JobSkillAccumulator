@@ -24,6 +24,7 @@ function App() {
   const [country, setCountry] = useState("us");
   const [extractionMode, setExtractionMode] = useState<ExtractionMode>("claude");
   const [siteResultCap, setSiteResultCap] = useState(10);
+  const [excludeDefense, setExcludeDefense] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<SearchProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +146,7 @@ function App() {
       country,
       extractionMode,
       siteResultCap,
+      excludeDefense,
       handleStreamEvent,
       () => {
         setError("Lost connection to the server");
@@ -191,6 +193,8 @@ function App() {
           onExtractionModeChange={setExtractionMode}
           siteResultCap={siteResultCap}
           onSiteResultCapChange={setSiteResultCap}
+          excludeDefense={excludeDefense}
+          onExcludeDefenseChange={setExcludeDefense}
         />
 
         {loading && progress && <SearchProgress progress={progress} />}
@@ -209,6 +213,7 @@ function App() {
               Saved to {result.txt_path} · Skill extraction:{" "}
               {result.extraction_mode === "claude" ? "Claude (AI)" : "Keyword matching (non-AI)"} ·
               Max results per site: {result.site_result_cap}
+              {result.exclude_defense && " · Defense/clearance jobs excluded"}
             </p>
 
             <section className="industries-section">

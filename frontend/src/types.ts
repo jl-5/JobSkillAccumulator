@@ -26,6 +26,7 @@ export interface SearchResult {
   country: string;
   extraction_mode: ExtractionMode;
   site_result_cap: number;
+  exclude_defense: boolean;
   generated_at: string;
   postings_analyzed: number;
   source_breakdown: Record<string, string>;
@@ -43,6 +44,7 @@ export interface HistoryEntry {
   country: string;
   extraction_mode: ExtractionMode;
   site_result_cap: number;
+  exclude_defense: boolean;
   generated_at: string;
   postings_analyzed: number;
 }
